@@ -421,6 +421,38 @@ table.sc { width: 100%; border-collapse: collapse; font-size: 14px; }
 .ranking small { color: var(--muted); }
 .end-note { color: var(--muted); margin: 14px 0 0; }
 
+/* Explanation mode */
+.explain { background: var(--surface); border: 1px solid var(--gold-line); border-radius: 14px; padding: 14px 16px; }
+.explain h2 { margin: 0 0 10px; font-size: 11px; letter-spacing: .2em; color: var(--gold); font-weight: 700; }
+.ex-steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.ex-steps > li { counter-increment: step; position: relative; padding-left: 34px; min-width: 0; }
+.ex-steps > li::before {
+  content: counter(step); position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(180deg, var(--red-bright), var(--red)); color: #fff; text-align: center;
+  font: 700 13px/24px var(--font-display); box-shadow: 0 0 0 1px var(--gold-line);
+}
+.ex-steps h3 { margin: 1px 0 5px; font-size: 14px; color: var(--gold-strong); letter-spacing: 0; }
+.ex-steps p { margin: 3px 0; font-size: 13.5px; color: #d9d1c7; }
+.ex-concl { font-weight: 700; color: var(--ink) !important; font-size: 14.5px !important; }
+.ex-why { margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; color: #d9d1c7; display: flex; flex-direction: column; gap: 5px; }
+.ex-why li::marker { color: var(--red-bright); }
+.ex-opts { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.ex-opt {
+  border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: rgba(0, 0, 0, .22);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline;
+}
+.ex-opt.best { border-color: var(--gold); background: var(--gold-soft); }
+.ex-opt .lab { font-weight: 600; font-size: 13.5px; min-width: 0; }
+.ex-opt .ev { font-weight: 700; color: var(--gold-strong); font-size: 13.5px; font-variant-numeric: tabular-nums; text-align: right; }
+.ex-opt .sub { font-size: 12.5px; color: var(--muted); min-width: 0; }
+.ex-opt .cmp { font-size: 12px; color: var(--muted); text-align: right; white-space: nowrap; }
+.ex-badge { display: inline-block; padding: 0 7px; border-radius: 999px; background: var(--red); color: #fff; font-weight: 700; font-size: 11px; line-height: 18px; }
+.ex-diff { color: var(--bad); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ex-mine { border-left: 3px solid var(--red-bright); padding-left: 8px; }
+.ex-foot { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+.ex-steps .mini, .ex-opt .mini { width: 18px; height: 18px; padding: 2.5px; vertical-align: -4px; }
+#explainOverlay .sheet { width: min(560px, 100%); }
+
 /* Phone-only pieces (hidden on wide screens) */
 .ticker { display: none; }
 .m-only { display: none !important; }
@@ -453,7 +485,7 @@ table.sc { width: 100%; border-collapse: collapse; font-size: 14px; }
   .card { order: -1; flex: 1 1 auto; min-height: 0; overflow: auto; border-radius: 14px; display: flex; }
   .card table.sc { height: 100%; max-height: 640px; }
   .play { flex: none; margin-top: auto; gap: 0; }
-  .advice, .log-box, .tray-hint { display: none !important; }
+  .advice, .log-box, .tray-hint, .explain { display: none !important; }
   .tray { padding: 8px 10px 6px; border-radius: 18px; }
   .banner .who { font-size: 18px; }
   .banner .rolls { font-size: 12px; }
@@ -540,6 +572,10 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
         <input type="checkbox" id="hintOn">
         <span>힌트 켜기<small>게임 중에도 힌트 버튼으로 켜고 끌 수 있어요. 족보를 고를 때 추천과 다르면 기록에 알려 줍니다.</small></span>
       </label>
+      <label class="check" for="explainOn" id="explainRow">
+        <input type="checkbox" id="explainOn">
+        <span>해설 모드<small>혼자 할 때 쓸 수 있어요. 굴릴 때마다 상황 읽기 → 선택지 비교 → 결론과 이유를 단계별로 보여 주고, 내 선택이 추천과 다르면 평균 점수 차이로 알려 줍니다.</small></span>
+      </label>
       <button type="submit" class="btn primary" id="startBtn">게임 시작</button>
       <div class="stats" id="statsBox"></div>
     </form>
@@ -554,6 +590,7 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
       <div class="actions">
         <button class="btn small" id="soundBtn" type="button">소리</button>
         <button class="btn small" id="hintBtn" type="button">힌트</button>
+        <button class="btn small" id="explainBtn" type="button" hidden>해설</button>
         <button class="btn small" id="rulesBtn" type="button">규칙</button>
         <button class="btn small" id="quitBtn" type="button"><span class="d-only">그만하기</span><span class="m-only">종료</span></button>
       </div>
@@ -575,6 +612,10 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
           <div class="tray-hint" id="trayHint"></div>
         </div>
         <div class="advice" id="advice" hidden></div>
+        <section class="explain" id="explain" hidden aria-labelledby="explainTitle" aria-live="polite">
+          <h2 id="explainTitle">해설</h2>
+          <div id="explainBody"></div>
+        </section>
         <div class="log-box">
           <h2>기록</h2>
           <ol class="log" id="log"></ol>
@@ -609,6 +650,14 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
     <h3>조작</h3>
     <p>주사위 통을 꾹 누르고 있으면 계속 흔들리고, 손을 떼는 순간 테이블로 굴러 나옵니다. 짧게 눌러도 굴릴 수 있어요. 키보드는 Space를 누르고 있다가 떼면 됩니다. 눈은 손을 뗄 때 정해지기 때문에 오래 흔든다고 유리하거나 불리하지 않아요.</p>
     <p>테이블의 주사위를 누르면 위쪽 보관함으로 옮겨지고, 다시 굴릴 때 통에 들어가지 않습니다. 보관함 주사위를 누르면 테이블로 돌아와요. 숫자키 1~5로도 옮길 수 있습니다. 점수표의 점선 칸을 눌러 기록합니다.</p>
+    <h3>전략 기초</h3>
+    <ul class="ex-why">
+      <li>윗단은 각 눈을 3개씩 모으면 딱 63점이라 보너스 35점을 받아요. 5·6 칸에서 4개를 만들어 두면 1·2 칸이 조금 모자라도 메울 수 있어요.</li>
+      <li>같은 눈이 3개 나오면 대개 그대로 모아 가세요. 포카드·요트·풀 하우스·해당 윗단 칸을 한꺼번에 노릴 수 있어요.</li>
+      <li>2-3-4-5처럼 양 끝이 열린 연속 4개는 1이나 6이 나오면 라지 스트레이트예요. 주사위 하나를 굴릴 때 확률은 1/3이에요.</li>
+      <li>초이스는 점수가 안 풀린 턴의 보험이에요. 이른 턴에 낮은 점수로 쓰지 마세요.</li>
+      <li>점수가 안 나올 땐 나중에 채워도 점수가 적은 칸(에이스 등)에 0점을 넣는 게 손해가 적어요.</li>
+    </ul>
     <h3>AI 난이도</h3>
     <p>쉬움은 가장 많이 나온 눈만 모으는 단순한 방식, 보통은 다음 한 번의 굴림까지 계산, 어려움은 남은 굴림을 모두 계산해서 둡니다. 힌트는 어려움 AI의 판단입니다.</p>
     <div class="row"><button class="btn primary" id="rulesClose" type="button">닫기</button></div>
@@ -616,6 +665,15 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
 </div>
 
 <!-- Game over -->
+<!-- Explanation (phones) -->
+<div class="overlay" id="explainOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="explainSheetTitle">
+    <h2 id="explainSheetTitle">해설</h2>
+    <div id="explainSheetBody"></div>
+    <div class="row"><button class="btn" id="explainLog" type="button">기록 보기</button><button class="btn primary" id="explainClose" type="button">닫기</button></div>
+  </div>
+</div>
+
 <!-- Full log (phones) -->
 <div class="overlay" id="logOverlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="logTitle">
@@ -796,7 +854,54 @@ function makePlanner(p) {
     if (best.keep.length === 5) return { action: 'score', cat: f.cat };
     return { action: 'reroll', keep: best.keep };
   }
-  return { decide, h, open };
+  /* Outlook of a keep (used by the explanation mode): playing on optimally, which box
+     we end up filling, how often, and the average points it scores. */
+  const d1M = new Map(), d2M = new Map(), bk1M = new Map();
+  function addDist(acc, dist, w) {
+    for (const [cat, e] of dist) {
+      const a = acc.get(cat) || { p: 0, pts: 0 };
+      a.p += e.p * w; a.pts += e.pts * w;
+      acc.set(cat, a);
+    }
+  }
+  function D0(hand) { const f = F(hand); return new Map([[f.cat, { p: 1, pts: score(f.cat, hand) }]]); }
+  function D1(keep) {
+    const k = keep.join('');
+    let r = d1M.get(k);
+    if (r) return r;
+    r = new Map();
+    for (const o of OUTCOMES[5 - keep.length]) addDist(r, D0(merge(keep, o.d)), o.p);
+    d1M.set(k, r);
+    return r;
+  }
+  function bestKeep1(hand) {
+    const k = hand.join('');
+    let r = bk1M.get(k);
+    if (r) return r;
+    let bv = -Infinity;
+    for (const s of subsets(hand)) { const v = E1(s); if (v > bv + 1e-9) { bv = v; r = s; } }
+    bk1M.set(k, r);
+    return r;
+  }
+  function D2(keep) {
+    const k = keep.join('');
+    let r = d2M.get(k);
+    if (r) return r;
+    r = new Map();
+    for (const o of OUTCOMES[5 - keep.length]) addDist(r, D1(bestKeep1(merge(keep, o.d))), o.p);
+    d2M.set(k, r);
+    return r;
+  }
+  function outlook(keep, rollsLeft) {
+    const dist = rollsLeft >= 2 ? D2(keep) : D1(keep);
+    let exp = 0;
+    const list = [];
+    for (const [cat, e] of dist) { exp += e.pts; list.push({ cat, p: e.p }); }
+    list.sort((a, b) => b.p - a.p);
+    const value = rollsLeft >= 2 ? E2(keep) : E1(keep);
+    return { exp, dist: list, all: dist, v: value };
+  }
+  return { decide, h, open, F, E1, E2, outlook, up, alive };
 }
 
 function easyDecide(p, dice, rollsLeft) {
@@ -843,7 +948,7 @@ const store = {
   get(k, fb) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch (e) { return fb; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } },
 };
-const DEFAULT_SETTINGS = { name: '', opponents: 1, levels: ['normal', 'normal', 'normal'], speed: 'normal', hintOn: false, sound: true };
+const DEFAULT_SETTINGS = { name: '', opponents: 1, levels: ['normal', 'normal', 'normal'], speed: 'normal', hintOn: false, sound: true, explain: true };
 let settings = Object.assign({}, DEFAULT_SETTINGS, store.get('yacht.settings', {}));
 if (!Array.isArray(settings.levels) || settings.levels.length < 3) settings.levels = DEFAULT_SETTINGS.levels.slice();
 let stats = Object.assign({ games: 0, best: 0, sum: 0 }, store.get('yacht.stats', {}));
@@ -941,6 +1046,7 @@ function renderAiRows() {
     box.appendChild(row);
   }
   $('#speedSet').hidden = settings.opponents === 0;
+  $('#explainRow').hidden = settings.opponents !== 0;
 }
 function renderStats() {
   const avg = stats.games ? Math.round(stats.sum / stats.games) : 0;
@@ -955,11 +1061,13 @@ function initSetup() {
   $('#opp' + settings.opponents).checked = true;
   $({ slow: '#spSlow', normal: '#spNormal', fast: '#spFast' }[settings.speed] || '#spNormal').checked = true;
   $('#hintOn').checked = !!settings.hintOn;
+  $('#explainOn').checked = !!settings.explain;
   document.querySelectorAll('input[name="opp"]').forEach(r => r.addEventListener('change', () => {
     settings.opponents = +r.value; saveSettings(); renderAiRows();
   }));
   document.querySelectorAll('input[name="speed"]').forEach(r => r.addEventListener('change', () => { settings.speed = r.value; saveSettings(); }));
   $('#hintOn').addEventListener('change', e => { settings.hintOn = e.target.checked; saveSettings(); });
+  $('#explainOn').addEventListener('change', e => { settings.explain = e.target.checked; saveSettings(); });
   $('#nameInput').addEventListener('input', e => { settings.name = e.target.value.trim(); saveSettings(); });
   $('#setupForm').addEventListener('submit', e => { e.preventDefault(); newGame(); });
   renderAiRows();
@@ -1022,6 +1130,7 @@ function canHumanRoll() {
   return isHumanTurn() && state.rollsLeft > 0 && !state.busy && state.phase !== 'shake' && anyLoose();
 }
 function beginShake() {
+  if (state.rolled && isHumanTurn() && explainActive()) reviewReroll();
   state.phase = 'shake';
   shake.t0 = performance.now();
   shake.releasing = false;
@@ -1177,10 +1286,229 @@ function log(html, cls = '') {
 /* ================= Hint ================= */
 let hintCache = { key: '', rec: null };
 function currentRec() {
-  if (!settings.hintOn || !isHumanTurn() || !state.rolled || state.phase !== 'table' || state.busy) return null;
-  const key = state.round + '|' + state.dice.join('') + '|' + state.rollsLeft;
+  if (!(settings.hintOn || explainActive()) || !isHumanTurn() || !state.rolled || state.phase !== 'table' || state.busy) return null;
+  const a = getAnalysis();
+  if (a) return a.rec;
+  const key = gameId + '|' + state.round + '|' + state.dice.join('') + '|' + state.rollsLeft;
   if (hintCache.key !== key) hintCache = { key, rec: makePlanner(cur()).decide(state.dice, state.rollsLeft, 2) };
   return hintCache.rec;
+}
+
+/* ================= Explanation mode (solo only) =================
+   Step by step: read the position → compare the options → conclusion and reasons.
+   Every number comes from the same calculation the hard AI uses. */
+function explainActive() { return !!state && state.players.length === 1 && !!settings.explain; }
+let exCache = { key: '', a: null };
+function getAnalysis() {
+  if (!explainActive() || !isHumanTurn() || !state.rolled || state.phase !== 'table') return null;
+  const key = gameId + '|' + state.round + '|' + state.dice.join('') + '|' + state.rollsLeft;
+  if (exCache.key === key) return exCache.a;
+  const p = cur();
+  const pl = makePlanner(p);
+  const hand = [...state.dice].sort(sortNum);
+  const rollsLeft = state.rollsLeft;
+  const rec = pl.decide(state.dice, rollsLeft, 2);
+  const now = pl.F(hand);
+  const a = { p, pl, hand, rollsLeft, rec, now, options: [], nowOpt: null };
+  if (rollsLeft > 0) {
+    const stage = rollsLeft >= 2 ? pl.E2 : pl.E1;
+    a.options = subsets(hand).filter(s => s.length < 5)
+      .map(s => ({ keep: s, v: stage(s) }))
+      .sort((x, y) => y.v - x.v).slice(0, 3)
+      .map(o => Object.assign(o, pl.outlook(o.keep, rollsLeft)));
+    a.nowOpt = { keep: hand, v: now.v, exp: score(now.cat, hand), dist: [{ cat: now.cat, p: 1 }], now: true };
+  }
+  a.cats = pl.open.map(c => ({ cat: c.id, raw: score(c.id, hand), v: pl.h(c, hand) })).sort((x, y) => y.v - x.v);
+  exCache = { key, a };
+  return a;
+}
+
+const pct = p => p < 0.005 ? '1% 미만' : Math.round(p * 100) + '%';
+const pts1 = x => (Math.round(x * 10) / 10).toFixed(1);
+const keepKey = k => [...k].sort(sortNum).join('');
+const catName = id => CAT[id].name;
+function keepLabel(k, rollsLeftAfter) {
+  if (!k.length) return '전부 다시 굴리기';
+  return `${k.map(miniDie).join('')} 남기고 굴리기`;
+}
+
+function describeHand(hand) {
+  const c = counts(hand);
+  const parts = [];
+  for (let v = 6; v >= 1; v--) if (c[v] >= 2) parts.push(`${v}이(가) ${c[v]}개`);
+  let best = { len: 0, from: 0 }, run = 0;
+  for (let v = 1; v <= 6; v++) { run = c[v] ? run + 1 : 0; if (run > best.len) best = { len: run, from: v - run + 1 }; }
+  if (best.len >= 3) {
+    const seq = Array.from({ length: best.len }, (_, k) => best.from + k).join('-');
+    parts.push(`연속 ${seq}`);
+  }
+  const named = [];
+  if (c.includes(5)) named.push('요트 완성');
+  else if (c.some(x => x >= 4)) named.push('포카드 완성');
+  if (c.includes(3) && c.includes(2)) named.push('풀 하우스 완성');
+  if (hasRun(c, 5)) named.push('라지 스트레이트 완성');
+  else if (hasRun(c, 4)) named.push('스몰 스트레이트 완성');
+  const sum = hand.reduce((x, y) => x + y, 0);
+  let txt = parts.length ? parts.join(', ') : '같은 눈이나 긴 연속이 없는 흩어진 패';
+  if (named.length) txt += ` (${named.join(', ')})`;
+  return `${txt}. 눈의 합은 ${sum}이에요.`;
+}
+
+function describeBoard(p) {
+  const up = upperSum(p);
+  const par = upperPar(p);
+  let bonus;
+  if (up >= BONUS_AT) bonus = '윗단 보너스 35점은 이미 확보했어요.';
+  else if (!bonusAlive(p)) bonus = `윗단 ${up}/63 · 남은 칸을 모두 5개씩 채워도 63에 못 미쳐서 보너스는 어려워요. 윗단은 이제 점수만 보고 고르면 돼요.`;
+  else {
+    const filled = UPPER.some(c => p.scores[c.id] != null);
+    bonus = `윗단 ${up}/63 · 보너스까지 ${BONUS_AT - up}점 남았어요.` +
+      (filled ? ` 지금까지 '각 눈 3개' 기준보다 ${par >= 0 ? par + '점 앞서' : -par + '점 뒤처져'} 있어요.` : ' 각 눈을 3개씩만 모으면 딱 63점이에요.');
+  }
+  const openLower = LOWER.filter(c => p.scores[c.id] == null).map(c => c.name);
+  const lowerTxt = openLower.length ? `남은 아랫단: ${openLower.join(', ')}.` : '아랫단은 모두 채웠어요.';
+  return `${bonus} ${lowerTxt}`;
+}
+
+function keepReasons(a, opt) {
+  const r = [];
+  const k = opt.keep;
+  const c = counts(k);
+  const maxC = Math.max(...c);
+  const face = c.lastIndexOf(maxC);
+  const distinct = [...new Set(k)];
+  const isRun = k.length >= 3 && distinct.length === k.length && k[k.length - 1] - k[0] === k.length - 1;
+  const pairs = [1, 2, 3, 4, 5, 6].filter(v => c[v] === 2);
+  const open = id => a.p.scores[id] == null;
+  if (!k.length) {
+    r.push('남길 만한 조합(같은 눈 2개 이상, 연속 3개 이상)이 없어요. 5개를 모두 다시 굴리는 쪽이 평균 결과가 가장 좋아요.');
+  } else if (isRun) {
+    const needs = [k[0] - 1, k[k.length - 1] + 1].filter(v => v >= 1 && v <= 6);
+    r.push(`연속된 ${k.join('-')}을(를) 살려 스트레이트를 노려요.` +
+      (k.length === 4 && open('lStr') ? ` 라지 스트레이트까지 ${needs.join(' 또는 ')} 하나만 더 나오면 돼요.` : ''));
+  } else if (pairs.length === 2 && open('full')) {
+    r.push(`페어 두 개(${pairs.join('·')})를 남기면 주사위 하나만 둘 중 하나와 맞으면 풀 하우스예요. 한 번 굴릴 때 확률은 1/3이에요.`);
+  } else if (maxC >= 2) {
+    const targets = [];
+    if (a.p.scores[UPPER[face - 1].id] == null) targets.push(`'${UPPER[face - 1].name}' 칸`);
+    if (maxC >= 2 && open('fourK')) targets.push('포카드');
+    if (open('full')) targets.push('풀 하우스');
+    if (open('yacht')) targets.push('요트');
+    r.push(`같은 눈 ${face}을(를) ${maxC}개 모아 두면 ${targets.length ? targets.join('·') + '을(를) 한꺼번에 노릴 수 있어요.' : '합계 점수를 키울 수 있어요.'}`);
+    const pY = opt.all.get('yacht');
+    if (pY && open('yacht') && pY.p >= 0.02) r.push(`이 선택으로 요트(50점)에 기록하게 될 확률은 ${pct(pY.p)}예요.`);
+    if (a.pl.alive && a.p.scores[UPPER[face - 1].id] == null) r.push(`'${UPPER[face - 1].name}' 칸은 ${face}이(가) 3개면 ${3 * face}점으로 보너스 기준을 채워요.`);
+  } else {
+    r.push(`큰 눈(${k.join(', ')})을 남겨 초이스처럼 합계로 점수를 받는 칸을 키우는 선택이에요.`);
+  }
+  if (opt.dist.length) {
+    const top = opt.dist.slice(0, 3).map(d => `'${catName(d.cat)}' ${pct(d.p)}`).join(', ');
+    r.push(`결과적으로 ${top} 순으로 기록하게 될 가능성이 높고, 평균 약 ${pts1(opt.exp)}점을 얻어요.`);
+  }
+  return r;
+}
+
+function scoreReasons(a) {
+  const r = [];
+  const best = a.cats[0];
+  const c = CAT[best.cat];
+  const p = a.p;
+  const keepValue = Math.round(PAR[best.cat]);
+  if (best.raw === 0) {
+    r.push('점수가 나는 칸이 마땅치 않아요. 이럴 땐 아껴 둘 가치가 가장 작은 칸을 0점으로 버리는 게 손해가 적어요.');
+    r.push(`'${c.name}' 칸은 나중에 채워도 대략 ${keepValue}점 정도라, 여기서 0점을 받아도 잃는 게 가장 적어요.`);
+  } else {
+    const diff = best.raw - keepValue;
+    r.push(`'${c.name}'에 ${best.raw}점. 이 칸을 나중에 채운다면 대략 ${keepValue}점 정도라, 지금 쓰면 ${diff >= 0 ? `${diff}점 이득이에요` : `${-diff}점 손해지만 다른 칸에 쓰는 것보다는 나아요`}.`);
+  }
+  if (c.face && a.pl.alive) {
+    const ns = upperSum(p) + best.raw;
+    if (ns >= BONUS_AT) r.push(`이 기록으로 윗단이 ${ns}점이 되어 보너스 35점을 확보해요.`);
+    else r.push(`'각 눈 3개' 기준(${3 * c.face}점)보다 ${best.raw - 3 * c.face >= 0 ? (best.raw - 3 * c.face) + '점 많아서 보너스에 도움이 돼요' : (3 * c.face - best.raw) + '점 모자라서 다른 윗단 칸에서 만회해야 해요'}.`);
+  }
+  const second = a.cats[1];
+  if (second) {
+    let why = '';
+    if (second.cat === 'choice') why = ' 초이스는 어떤 주사위로도 평균 20점 넘게 받을 수 있는 칸이라, 급하지 않으면 나중을 위해 남겨 둬요.';
+    else if (second.cat === 'yacht' && second.raw === 0) why = ' 요트(50점)는 아직 나올 기회가 있어서 0점으로 버리기 아까워요.';
+    else if (CAT[second.cat].face && a.pl.alive) why = ' 윗단 칸은 보너스와 연결돼 있어서 개수가 적을 때 쓰면 손해가 커요.';
+    r.push(`다음 후보는 '${catName(second.cat)}' ${second.raw}점이지만 종합 평가가 ${pts1(best.v - second.v)} 낮아요.${why}`);
+  }
+  if (a.rollsLeft > 0) r.push(`굴림이 ${a.rollsLeft}번 남았지만, 다시 굴려서 기대할 수 있는 것보다 지금 확정하는 쪽이 나아요.`);
+  return r;
+}
+
+function optionRow(o, best, isBest, a) {
+  const label = o.now ? `지금 '${catName(o.dist[0].cat)}'에 기록` : keepLabel(o.keep);
+  const likely = o.now ? `${score(o.dist[0].cat, a.hand)}점 확정` : '주로 ' + o.dist.slice(0, 2).map(d => `'${catName(d.cat)}' ${pct(d.p)}`).join(', ');
+  const diff = isBest ? '<span class="ex-badge">추천</span>' : `<span class="ex-diff">−${pts1(best.v - o.v)}</span>`;
+  return `<div class="ex-opt${isBest ? ' best' : ''}"><span class="lab">${label}</span><span class="ev">${o.now ? o.exp : '평균 ' + pts1(o.exp)}점</span><span class="sub">${likely}</span><span class="cmp">종합 평가 ${diff}</span></div>`;
+}
+
+function explainHtml() {
+  const p = cur();
+  if (state.over) return '';
+  if (!state.rolled || state.phase === 'shake') {
+    const tips = [];
+    if (p.scores.yacht == null) tips.push('같은 눈이 3개 이상 나오면 요트(50점)·포카드·해당 윗단 칸을 함께 노려 볼 만해요.');
+    if (p.scores.lStr == null || p.scores.sStr == null) tips.push('연속 4개가 나오면 스트레이트 쪽으로 방향을 잡아요. 특히 2-3-4-5는 1이나 6 둘 다 통해서 확률이 높아요.');
+    if (p.scores.choice == null) tips.push('초이스는 점수가 안 풀린 턴의 보험이에요. 이른 턴에 낮은 점수로 쓰지 마세요.');
+    return `<ol class="ex-steps">
+      <li><h3>판 읽기</h3><p>${describeBoard(p)}</p></li>
+      <li><h3>이번 턴에 기억할 것</h3><ul class="ex-why">${tips.map(t => `<li>${t}</li>`).join('') || '<li>마지막 칸이에요. 나오는 대로 최선을 다해 보세요.</li>'}</ul></li>
+    </ol>
+    <p class="ex-foot">${state.phase === 'shake' ? '굴리는 중…' : '통을 굴리면 어떤 주사위를 남길지 단계별로 설명해 드릴게요.'}</p>`;
+  }
+  const a = getAnalysis();
+  if (!a) return '';
+  const hand = a.hand;
+  let html = `<ol class="ex-steps">
+    <li><h3>상황 읽기</h3>
+      <p>${hand.map(miniDie).join('')} · 남은 굴림 ${a.rollsLeft}번</p>
+      <p>${describeHand(hand)}</p>
+      <p>${describeBoard(p)}</p></li>`;
+  if (a.rollsLeft > 0) {
+    const all = [...a.options, a.nowOpt];
+    const bestOpt = a.rec.action === 'score' ? a.nowOpt : (a.options.find(o => keepKey(o.keep) === keepKey(a.rec.keep)) || a.options[0]);
+    const ordered = [bestOpt, ...all.filter(o => o !== bestOpt)].slice(0, 4);
+    html += `<li><h3>선택지 비교</h3><div class="ex-opts">${ordered.map(o => optionRow(o, bestOpt, o === bestOpt, a)).join('')}</div></li>`;
+    const reasons = a.rec.action === 'score' ? scoreReasons(a) : keepReasons(a, bestOpt);
+    if (a.rec.action !== 'score') {
+      const second = ordered[1];
+      if (second) reasons.push(`두 번째 선택(${second.now ? `지금 '${catName(second.dist[0].cat)}'에 기록` : keepLabel(second.keep)})은 평균 ${pts1(second.exp)}점이고, 남은 칸의 가치까지 따지면 ${pts1(bestOpt.v - second.v)}만큼 불리해요.`);
+      if (!bestOpt.now && a.nowOpt) reasons.push(`지금 바로 기록하면 '${catName(a.now.cat)}' ${score(a.now.cat, hand)}점이지만, 굴림이 남아 있으니 더 노리는 편이 유리해요.`);
+    }
+    const head = a.rec.action === 'score' ? `지금 '${catName(a.rec.cat)}'에 기록하세요.` : `${keepLabel(a.rec.keep)}가 가장 좋아요.`;
+    html += `<li><h3>결론과 이유</h3><p class="ex-concl">${head}</p><ul class="ex-why">${reasons.map(t => `<li>${t}</li>`).join('')}</ul></li>`;
+    // The player's own current selection, if it differs.
+    const mine = state.dice.filter((_, i) => state.held[i]);
+    if (mine.length && mine.length < 5 && a.rec.action === 'reroll' && keepKey(mine) !== keepKey(a.rec.keep)) {
+      const o = a.pl.outlook([...mine].sort(sortNum), a.rollsLeft);
+      html += `<li><h3>지금 내가 고른 것</h3><p class="ex-mine">${keepLabel([...mine].sort(sortNum))} → 평균 ${pts1(o.exp)}점, 주로 ${o.dist.slice(0, 2).map(d => `'${catName(d.cat)}' ${pct(d.p)}`).join(', ')}. 추천보다 종합 평가가 ${pts1(Math.max(0, bestOpt.v - o.v))} 낮아요.</p></li>`;
+    }
+  } else {
+    const rows = a.cats.slice(0, 4).map((c, k) =>
+      `<div class="ex-opt${k === 0 ? ' best' : ''}"><span class="lab">'${catName(c.cat)}'에 기록</span><span class="ev">${c.raw}점</span><span class="sub">아껴 둘 가치 약 ${Math.round(PAR[c.cat])}점</span><span class="cmp">종합 평가 ${k === 0 ? '<span class="ex-badge">추천</span>' : `<span class="ex-diff">−${pts1(a.cats[0].v - c.v)}</span>`}</span></div>`).join('');
+    html += `<li><h3>기록할 칸 비교</h3><div class="ex-opts">${rows}</div></li>`;
+    html += `<li><h3>결론과 이유</h3><p class="ex-concl">'${catName(a.cats[0].cat)}'에 기록하세요.</p><ul class="ex-why">${scoreReasons(a).map(t => `<li>${t}</li>`).join('')}</ul></li>`;
+  }
+  html += `</ol><p class="ex-foot">종합 평가: 이번에 얻는 점수에서 그 칸을 나중을 위해 아껴 둘 가치를 빼고, 윗단 보너스 가능성을 더한 값이에요. 평균 점수는 남은 굴림을 끝까지 최선으로 했을 때 그 턴에 얻는 점수예요.</p>`;
+  return html;
+}
+
+// After a reroll or a scoring move, say how it compared with the recommendation.
+function reviewReroll() {
+  const a = getAnalysis();
+  if (!a) return;
+  const mine = state.dice.filter((_, i) => state.held[i]).sort(sortNum);
+  if (a.rec.action === 'score') {
+    log(`선택 리뷰: 추천은 다시 굴리지 않고 '${catName(a.rec.cat)}'에 ${score(a.rec.cat, a.hand)}점 기록이었어요`, 'tip');
+    return;
+  }
+  if (keepKey(mine) === keepKey(a.rec.keep)) return;
+  const b = a.pl.outlook(a.rec.keep, a.rollsLeft), u = a.pl.outlook(mine, a.rollsLeft);
+  if (b.v - u.v < 0.1) return; // practically as good as the recommendation
+  log(`선택 리뷰: 추천 ${a.rec.keep.length ? a.rec.keep.map(miniDie).join('') + ' 남기기' : '전부 굴리기'} 평균 ${pts1(b.exp)}점 · 내 선택 ${mine.length ? mine.map(miniDie).join('') + ' 남기기' : '전부 굴리기'} 평균 ${pts1(u.exp)}점`, 'tip');
 }
 
 /* ================= Render ================= */
@@ -1295,6 +1623,11 @@ function render() {
   hb.innerHTML = `<span class="d-only">${settings.hintOn ? '힌트 켜짐' : '힌트 꺼짐'}</span><span class="m-only">${settings.hintOn ? '힌트' : '힌트 끔'}</span>`;
   hb.classList.toggle('on', settings.hintOn);
   hb.setAttribute('aria-pressed', settings.hintOn ? 'true' : 'false');
+  const xb = $('#explainBtn');
+  xb.hidden = state.players.length !== 1;
+  xb.innerHTML = `<span class="d-only">${settings.explain ? '해설 켜짐' : '해설 꺼짐'}</span><span class="m-only">${settings.explain ? '해설' : '해설 끔'}</span>`;
+  xb.classList.toggle('on', !!settings.explain);
+  xb.setAttribute('aria-pressed', settings.explain ? 'true' : 'false');
 
   // Banner
   const dots = [0, 1, 2].map(k => `<i class="${k < state.rollsLeft ? 'full' : ''}"></i>`).join('');
@@ -1345,7 +1678,7 @@ function render() {
     else if (!rec.keep.length) recMsg = '모두 다시 굴리기';
     else recMsg = `${rec.keep.map(miniDie).join('')} 남기고 다시 굴리기`;
   }
-  if (settings.hintOn && human) {
+  if (settings.hintOn && human && !explainActive()) {
     adv.hidden = false;
     let msg = recMsg;
     if (!state.rolled || state.phase === 'shake') msg = state.phase === 'shake' ? '굴리는 중…' : '먼저 주사위를 굴리세요.';
@@ -1355,7 +1688,10 @@ function render() {
 
   // Phone ticker: the hint when there is one, otherwise the latest log line. Tap for the full log.
   const tk = $('#ticker');
-  if (recMsg && settings.hintOn && human) {
+  if (explainActive() && human && !state.over) {
+    tk.className = 'ticker';
+    tk.innerHTML = `<span class="rec-tag">해설</span>${recMsg || (state.phase === 'shake' ? '굴리는 중…' : '통을 굴려 보세요')}<span class="more">자세히 ›</span>`;
+  } else if (recMsg && settings.hintOn && human) {
     tk.className = 'ticker';
     tk.innerHTML = `<span class="rec-tag">추천</span>${recMsg}`;
   } else {
@@ -1365,6 +1701,16 @@ function render() {
   }
 
   renderCard(rec);
+  const ex = $('#explain');
+  if (explainActive() && !state.over && human) {
+    const exHtml = explainHtml();
+    ex.hidden = false;
+    $('#explainBody').innerHTML = exHtml;
+    if (!$('#explainOverlay').hidden) $('#explainSheetBody').innerHTML = exHtml;
+  } else {
+    ex.hidden = true;
+    $('#explainOverlay').hidden = true;
+  }
   const logHtml = state.log.map(l => `<li class="${l.cls}">${l.html}</li>`).join('');
   $('#log').innerHTML = logHtml;
   if (!$('#logOverlay').hidden) $('#logFull').innerHTML = logHtml;
@@ -1443,6 +1789,18 @@ function bindGame() {
     const b = e.target.closest('.pick');
     if (b && isHumanTurn()) chooseCategory(b.dataset.cat);
   });
+  $('#explainBtn').addEventListener('click', () => {
+    settings.explain = !settings.explain; saveSettings();
+    $('#explainOn').checked = settings.explain;
+    render();
+  });
+  $('#explainClose').addEventListener('click', () => { $('#explainOverlay').hidden = true; });
+  $('#explainOverlay').addEventListener('click', e => { if (e.target.id === 'explainOverlay') e.currentTarget.hidden = true; });
+  $('#explainLog').addEventListener('click', () => {
+    $('#explainOverlay').hidden = true;
+    $('#logFull').innerHTML = state ? state.log.map(l => `<li class="${l.cls}">${l.html}</li>`).join('') : '';
+    $('#logOverlay').hidden = false;
+  });
   $('#hintBtn').addEventListener('click', () => {
     settings.hintOn = !settings.hintOn; saveSettings();
     $('#hintOn').checked = settings.hintOn;
@@ -1462,6 +1820,13 @@ function bindGame() {
   });
   $('#ticker').addEventListener('click', () => {
     if (!state) return;
+    if (explainActive() && isHumanTurn()) {
+      $('#explainSheetBody').innerHTML = explainHtml();
+      $('#explainOverlay').hidden = false;
+      $('#explainOverlay .sheet').scrollTop = 0;
+      $('#explainClose').focus({ preventScroll: true });
+      return;
+    }
     $('#logFull').innerHTML = state.log.map(l => `<li class="${l.cls}">${l.html}</li>`).join('');
     $('#logOverlay').hidden = false;
     $('#logClose').focus();
@@ -1472,14 +1837,14 @@ function bindGame() {
   $('#toSetupBtn').addEventListener('click', showSetup);
 
   const gameKeys = e => {
-    if (!state || $('#game').hidden || !$('#rulesOverlay').hidden || !$('#endOverlay').hidden || !$('#logOverlay').hidden) return false;
+    if (!state || $('#game').hidden || !$('#rulesOverlay').hidden || !$('#endOverlay').hidden || !$('#logOverlay').hidden || !$('#explainOverlay').hidden) return false;
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'select' || tag === 'textarea') return false;
     if (tag === 'button' && e.target.id !== 'cup') return false;
     return true;
   };
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { $('#rulesOverlay').hidden = true; $('#logOverlay').hidden = true; return; }
+    if (e.key === 'Escape') { $('#rulesOverlay').hidden = true; $('#logOverlay').hidden = true; $('#explainOverlay').hidden = true; return; }
     if (!gameKeys(e)) return;
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
