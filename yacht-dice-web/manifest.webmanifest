@@ -1,0 +1,30 @@
+{
+  "name": "요트 다이스",
+  "short_name": "요트 다이스",
+  "description": "혼자 연습하거나 AI 1~3명과 대결하는 요트 다이스. 통을 꾹 눌러 흔들고, 힌트로 더 좋은 선택을 배워 보세요.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0808",
+  "theme_color": "#0a0808",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
