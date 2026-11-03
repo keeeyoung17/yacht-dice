@@ -1,5 +1,5 @@
 // Offline support. The page itself is fetched network-first so updates show up right away.
-const CACHE = 'yacht-96d60ee11d';
+const CACHE = 'yacht-5a9e5cd940';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
 
 self.addEventListener('install', e => {

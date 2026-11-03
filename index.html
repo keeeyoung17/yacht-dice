@@ -421,10 +421,72 @@ table.sc { width: 100%; border-collapse: collapse; font-size: 14px; }
 .ranking small { color: var(--muted); }
 .end-note { color: var(--muted); margin: 14px 0 0; }
 
+/* Phone-only pieces (hidden on wide screens) */
+.ticker { display: none; }
+.m-only { display: none !important; }
+.log.full { max-height: 60vh; font-size: 14px; }
+
 /* Responsive */
 @media (max-width: 880px) {
   .board { grid-template-columns: minmax(0, 1fr); }
   .setup { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+}
+/* Phones and narrow tablets: the whole game fits one screen.
+   Scorecard on top (scrolls inside itself only if the screen is very short), dice table at the bottom. */
+@media (max-width: 880px) {
+  body.ingame { padding-block: 6px; }
+  body.ingame .wrap { max-width: 560px; }
+  #game:not([hidden]) {
+    display: flex; flex-direction: column;
+    height: calc(100vh - 12px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    height: calc(100dvh - 12px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .d-only { display: none !important; }
+  .m-only { display: revert !important; }
+  .topbar { margin-bottom: 6px; gap: 8px; flex: none; flex-wrap: nowrap; }
+  .topbar .brand { display: none; }
+  .topbar .round { white-space: nowrap; }
+  .topbar .actions { gap: 4px; flex-wrap: nowrap; }
+  .topbar .btn.small { padding: 5px 10px; font-size: 12.5px; }
+  .board { display: flex; flex-direction: column; align-items: stretch; gap: 8px; flex: 1; min-height: 0; }
+  .sc td.cat .nm { white-space: nowrap; }
+  .card { order: -1; flex: 1 1 auto; min-height: 0; overflow: auto; border-radius: 14px; display: flex; }
+  .card table.sc { height: 100%; max-height: 640px; }
+  .play { flex: none; margin-top: auto; gap: 0; }
+  .advice, .log-box, .tray-hint { display: none !important; }
+  .tray { padding: 8px 10px 6px; border-radius: 18px; }
+  .banner .who { font-size: 18px; }
+  .banner .rolls { font-size: 12px; }
+  .stage { margin: 8px 0 4px; }
+  .stage.compact .cup .lbl { font-size: 11px; }
+  .ticker {
+    display: block; width: 100%; border: none; background: transparent; color: var(--muted);
+    font-size: 12.5px; text-align: center; padding: 3px 6px; min-height: 22px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ticker .rec-tag { color: var(--gold); font-weight: 700; letter-spacing: .12em; margin-right: 6px; }
+  .ticker.tip { color: var(--gold); }
+  .ticker .more { color: var(--gold); margin-left: 6px; }
+  .ticker .mini { width: 16px; height: 16px; padding: 2px; vertical-align: -3px; }
+  table.sc { font-size: 13px; }
+  .sc th, .sc td { padding: 1px 4px; }
+  .sc td { height: 24px; }
+  .sc thead th { padding-top: 6px; padding-bottom: 4px; font-size: 12px; }
+  .sc thead th .tag { font-size: 10px; }
+  .sc td.cat .ds { display: none; }
+  .sc th.cat, .sc td.cat { padding-left: 10px; width: 34%; }
+  .sc .pick { min-height: 20px; padding: 0 4px; border-radius: 6px; }
+  .sc tr.bonus { display: none; }
+  .sc tr.sub td { height: 26px; font-size: 12px; }
+  .sc tr.sub small { display: inline; margin-left: 3px; }
+  .sc tr.total td { height: 28px; font-size: 17px; }
+  .sc tr.total td.cat { font-size: 15px; }
+  .sc tr.sep td { height: 3px; }
+}
+@media (max-width: 880px) and (max-height: 700px) {
+  .sc td { height: 22px; }
+  .sc tr.sub td, .sc tr.total td { height: 24px; }
+  .sc thead th { padding-top: 4px; padding-bottom: 2px; }
 }
 @media (max-width: 520px) {
   .sc td.cat .ds { display: none; }
@@ -493,7 +555,7 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
         <button class="btn small" id="soundBtn" type="button">소리</button>
         <button class="btn small" id="hintBtn" type="button">힌트</button>
         <button class="btn small" id="rulesBtn" type="button">규칙</button>
-        <button class="btn small" id="quitBtn" type="button">그만하기</button>
+        <button class="btn small" id="quitBtn" type="button"><span class="d-only">그만하기</span><span class="m-only">종료</span></button>
       </div>
     </div>
 
@@ -509,6 +571,7 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
               <span class="body"></span><span class="rim"></span><span class="lbl" id="cupLabel"></span>
             </button>
           </div>
+          <button class="ticker" id="ticker" type="button" aria-label="기록 전체 보기"></button>
           <div class="tray-hint" id="trayHint"></div>
         </div>
         <div class="advice" id="advice" hidden></div>
@@ -553,6 +616,15 @@ html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area
 </div>
 
 <!-- Game over -->
+<!-- Full log (phones) -->
+<div class="overlay" id="logOverlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="logTitle">
+    <h2 id="logTitle">기록</h2>
+    <ol class="log full" id="logFull"></ol>
+    <div class="row"><button class="btn primary" id="logClose" type="button">닫기</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="endOverlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="endTitle">
     <h2 id="endTitle">게임 끝</h2>
@@ -578,10 +650,10 @@ const CATS = [
   { id: 'fives',  name: '파이브', desc: '5의 합', face: 5 },
   { id: 'sixes',  name: '식스', desc: '6의 합', face: 6 },
   { id: 'choice', name: '초이스', desc: '5개 총합' },
-  { id: 'fourK',  name: '포 오브 어 카인드', desc: '같은 눈 4개 · 총합' },
+  { id: 'fourK',  name: '포 오브 어 카인드', short: '포카드', desc: '같은 눈 4개 · 총합' },
   { id: 'full',   name: '풀 하우스', desc: '3개 + 2개 · 총합' },
-  { id: 'sStr',   name: '스몰 스트레이트', desc: '4개 연속 · 15점' },
-  { id: 'lStr',   name: '라지 스트레이트', desc: '5개 연속 · 30점' },
+  { id: 'sStr',   name: '스몰 스트레이트', short: 'S 스트레이트', desc: '4개 연속 · 15점' },
+  { id: 'lStr',   name: '라지 스트레이트', short: 'L 스트레이트', desc: '5개 연속 · 30점' },
   { id: 'yacht',  name: '요트', desc: '5개 모두 같음 · 50점' },
 ];
 const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
@@ -896,6 +968,7 @@ function initSetup() {
 function showSetup() {
   gameId++;
   state = null;
+  document.body.classList.remove('ingame');
   $('#game').hidden = true;
   $('#endOverlay').hidden = true;
   $('#setup').hidden = false;
@@ -925,6 +998,7 @@ function newGame() {
   $('#setup').hidden = true;
   $('#endOverlay').hidden = true;
   $('#game').hidden = false;
+  document.body.classList.add('ingame');
   log(`게임 시작 · ${players.map(p => p.name).join(', ')}`);
   startTurn();
 }
@@ -1000,7 +1074,7 @@ function toggleHold(i) {
 function chooseCategory(id) {
   const p = cur();
   if (!state.rolled || state.phase !== 'table' || state.busy || p.scores[id] != null) return;
-  if (p.type === 'human') reviewChoice(p, id);
+  const tip = p.type === 'human' ? reviewChoice(p, id) : '';
   const v = score(id, state.dice);
   p.scores[id] = v;
   state.lastFill = { pi: state.cur, cat: id };
@@ -1008,6 +1082,7 @@ function chooseCategory(id) {
   const bonusNow = upperSum(p) >= BONUS_AT && upperSum(p) - (CAT[id].face ? v : 0) < BONUS_AT && CAT[id].face;
   log(`${esc(p.name)} · ${CAT[id].name} <span class="pts">${v}점</span>`);
   if (bonusNow) log(`${esc(p.name)} · 윗단 63점 달성! 보너스 <span class="pts">+35</span>`);
+  if (tip) log(tip, 'tip');
   render();
   const gid = gameId;
   setTimeout(() => { if (gid === gameId) nextTurn(); }, p.type === 'ai' ? SPEED[settings.speed].step : 280);
@@ -1019,12 +1094,11 @@ function reviewChoice(p, id) {
   state.advice.n++;
   const hand = [...state.dice].sort(sortNum);
   if (rec.action === 'score') {
-    if (rec.cat === id || planner.h(CAT[id], hand) >= planner.h(CAT[rec.cat], hand) - 0.01) { state.advice.hit++; return; }
-    log(`추천은 ‘${CAT[rec.cat].name}’ (${score(rec.cat, state.dice)}점)이었어요`, 'tip');
-  } else {
-    const keepTxt = rec.keep.length ? rec.keep.map(miniDie).join('') + ' 고정 후' : '전부';
-    log(`추천은 ${keepTxt} 다시 굴리기였어요`, 'tip');
+    if (rec.cat === id || planner.h(CAT[id], hand) >= planner.h(CAT[rec.cat], hand) - 0.01) { state.advice.hit++; return ''; }
+    return `추천은 ‘${CAT[rec.cat].name}’ (${score(rec.cat, state.dice)}점)이었어요`;
   }
+  const keepTxt = rec.keep.length ? rec.keep.map(miniDie).join('') + ' 고정 후' : '전부';
+  return `추천은 ${keepTxt} 다시 굴리기였어요`;
 }
 
 function nextTurn() {
@@ -1137,35 +1211,57 @@ const geo = {};
 function measure() {
   const stage = $('#stage');
   const W = stage.clientWidth || 320;
-  const S = Math.round(Math.max(42, Math.min(66, W * 0.13)));
-  const gap = Math.round(Math.max(8, Math.min(20, S * 0.28)));
+  // Phone layout keeps everything short: the cup sits beside the felt instead of below it.
+  const compact = window.matchMedia('(max-width: 880px)').matches;
+  let S, gap, gapT, shelfTop, shelfH, slotY, feltTop, feltH, feltX, feltW, cupW, cupH, cupX, cupY, H;
+  if (compact) {
+    S = Math.round(Math.max(36, Math.min(54, (W - 12) / 7.4)));
+    gap = Math.round(Math.max(6, S * 0.26));
+    gapT = Math.round(S * 0.18);
+    cupW = Math.round(S * 1.35); cupH = Math.round(S * 1.5);
+    shelfTop = 0; shelfH = S + 12; slotY = 6;
+    feltTop = shelfH + 8; feltH = Math.round(S * 1.75);
+    feltX = 0; feltW = W - cupW - 14;
+    cupX = W - cupW - 2; cupY = feltTop + Math.round((feltH - cupH) / 2) + 2;
+    H = feltTop + feltH + 2;
+  } else {
+    S = Math.round(Math.max(42, Math.min(66, W * 0.13)));
+    gap = gapT = Math.round(Math.max(8, Math.min(20, S * 0.28)));
+    shelfTop = 20; shelfH = S + 20; slotY = shelfTop + 10;
+    feltTop = shelfTop + shelfH + 14; feltH = Math.round(S * 2.3);
+    feltX = 0; feltW = W;
+    cupW = Math.round(S * 1.45); cupH = Math.round(S * 1.6);
+    cupX = Math.round((W - cupW) / 2); cupY = feltTop + feltH + 16;
+    H = cupY + cupH + 4;
+  }
   const x0 = Math.round((W - (5 * S + 4 * gap)) / 2);
-  const shelfTop = 20, shelfH = S + 20, slotY = shelfTop + 10;
-  const feltTop = shelfTop + shelfH + 14, feltH = Math.round(S * 2.3);
-  const cupW = Math.round(S * 1.45), cupH = Math.round(S * 1.6);
-  const cupX = Math.round((W - cupW) / 2), cupY = feltTop + feltH + 16;
-  Object.assign(geo, { W, S, gap, x0, shelfTop, shelfH, slotY, feltTop, feltH, cupX, cupY, cupW, cupH });
+  const x0t = feltX + Math.round((feltW - (5 * S + 4 * gapT)) / 2);
+  Object.assign(geo, { W, S, gap, gapT, x0, x0t, shelfTop, shelfH, slotY, feltTop, feltH, cupX, cupY, cupW, cupH });
+  stage.classList.toggle('compact', compact);
   stage.style.setProperty('--size', S + 'px');
-  stage.style.height = (cupY + cupH + 4) + 'px';
+  stage.style.height = H + 'px';
   const shelf = $('#shelf');
-  shelf.style.top = (shelfTop - 2) + 'px'; shelf.style.height = (shelfH + 2) + 'px';
+  shelf.style.top = (shelfTop - (compact ? 0 : 2)) + 'px'; shelf.style.height = (shelfH + (compact ? 0 : 2)) + 'px';
   $('#shelfLabel').style.top = '-19px';
+  $('#shelfLabel').hidden = compact;
   const felt = $('#felt');
-  felt.style.top = feltTop + 'px'; felt.style.height = feltH + 'px';
+  Object.assign(felt.style, { top: feltTop + 'px', height: feltH + 'px', left: feltX + 'px', width: feltW + 'px', right: 'auto' });
   const msg = $('#feltMsg');
-  msg.style.top = (feltTop + feltH / 2 - 10) + 'px';
+  Object.assign(msg.style, { top: (feltTop + feltH / 2 - 10) + 'px', left: feltX + 'px', width: feltW + 'px', right: 'auto' });
   slotEls.forEach((s, i) => { s.style.left = slotX(i) + 'px'; s.style.top = slotY + 'px'; });
   const cup = $('#cup');
   Object.assign(cup.style, { left: cupX + 'px', top: cupY + 'px', width: cupW + 'px', height: cupH + 'px' });
 }
 const slotX = i => geo.x0 + i * (geo.S + geo.gap);
+const tableX = i => geo.x0t + i * (geo.S + geo.gapT);
 function diePose(i) {
   const inSlot = state.held[i] && state.rolled && state.phase !== 'cup';
   if (inSlot) return { x: slotX(i), y: geo.slotY, rot: 0, s: 1, where: 'slot' };
   if (state.phase === 'table' && state.rolled) {
     const sc = state.scatter[i] || { dx: 0, dy: 0, rot: 0 };
     const room = (geo.feltH - geo.S) / 2;
-    return { x: slotX(i) + sc.dx * geo.gap * 0.45, y: geo.feltTop + room + sc.dy * room * 0.75, rot: sc.rot, s: 1, where: 'table' };
+    const tight = geo.gapT < geo.S * 0.25; // phone felt: less wobble so neighbours don't overlap
+    return { x: tableX(i) + sc.dx * geo.gapT * (tight ? 0.3 : 0.45), y: geo.feltTop + room + sc.dy * room * 0.75, rot: sc.rot * (tight ? 0.5 : 1), s: 1, where: 'table' };
   }
   // Inside the cup: shrunk and hidden. The spin makes them tumble on the way out.
   return { x: geo.cupX + (geo.cupW - geo.S) / 2, y: geo.cupY + geo.cupH * 0.1, rot: -300 + i * 40, s: 0.35, where: 'cup' };
@@ -1196,7 +1292,7 @@ function render() {
 
   $('#roundLabel').innerHTML = `라운드 <b>${Math.min(state.round, 12)}</b> / 12`;
   const hb = $('#hintBtn');
-  hb.textContent = settings.hintOn ? '힌트 켜짐' : '힌트 꺼짐';
+  hb.innerHTML = `<span class="d-only">${settings.hintOn ? '힌트 켜짐' : '힌트 꺼짐'}</span><span class="m-only">${settings.hintOn ? '힌트' : '힌트 끔'}</span>`;
   hb.classList.toggle('on', settings.hintOn);
   hb.setAttribute('aria-pressed', settings.hintOn ? 'true' : 'false');
 
@@ -1243,19 +1339,35 @@ function render() {
 
   // Advice
   const adv = $('#advice');
+  let recMsg = '';
+  if (rec) {
+    if (rec.action === 'score') recMsg = `‘${CAT[rec.cat].name}’에 기록 (${score(rec.cat, state.dice)}점)`;
+    else if (!rec.keep.length) recMsg = '모두 다시 굴리기';
+    else recMsg = `${rec.keep.map(miniDie).join('')} 남기고 다시 굴리기`;
+  }
   if (settings.hintOn && human) {
     adv.hidden = false;
-    let msg;
+    let msg = recMsg;
     if (!state.rolled || state.phase === 'shake') msg = state.phase === 'shake' ? '굴리는 중…' : '먼저 주사위를 굴리세요.';
     else if (!rec) msg = '계산 중…';
-    else if (rec.action === 'score') msg = `‘${CAT[rec.cat].name}’에 기록 (${score(rec.cat, state.dice)}점)`;
-    else if (!rec.keep.length) msg = '모두 다시 굴리기';
-    else msg = `${rec.keep.map(miniDie).join('')} 남기고 다시 굴리기`;
     adv.innerHTML = `<span class="tag">추천</span><span>${msg}</span>`;
   } else adv.hidden = true;
 
+  // Phone ticker: the hint when there is one, otherwise the latest log line. Tap for the full log.
+  const tk = $('#ticker');
+  if (recMsg && settings.hintOn && human) {
+    tk.className = 'ticker';
+    tk.innerHTML = `<span class="rec-tag">추천</span>${recMsg}`;
+  } else {
+    const last = state.log[0];
+    tk.className = 'ticker' + (last && last.cls ? ' ' + last.cls : '');
+    tk.innerHTML = (last ? last.html : '') + '<span class="more">기록 ›</span>';
+  }
+
   renderCard(rec);
-  $('#log').innerHTML = state.log.map(l => `<li class="${l.cls}">${l.html}</li>`).join('');
+  const logHtml = state.log.map(l => `<li class="${l.cls}">${l.html}</li>`).join('');
+  $('#log').innerHTML = logHtml;
+  if (!$('#logOverlay').hidden) $('#logFull').innerHTML = logHtml;
 }
 
 function renderCard(rec) {
@@ -1279,14 +1391,19 @@ function renderCard(rec) {
     }
     return `<td class="${curCls(i)}"></td>`;
   };
-  const row = c => `<tr><td class="cat"><span class="nm">${c.name}</span><span class="ds">${c.desc}</span></td>${ps.map((p, i) => cell(p, i, c)).join('')}</tr>`;
+  const nameHtml = c => c.short ? `<span class="d-only">${c.name}</span><span class="m-only">${c.short}</span>` : c.name;
+  const row = c => `<tr><td class="cat"><span class="nm">${nameHtml(c)}</span><span class="ds">${c.desc}</span></td>${ps.map((p, i) => cell(p, i, c)).join('')}</tr>`;
 
   html += UPPER.map(row).join('');
+  // On phones the bonus row is hidden, so this row also shows "+35" once the bonus is earned.
   html += `<tr class="sub"><td class="cat"><span class="nm">윗단 합</span><span class="ds">각 눈 3개 기준 대비</span></td>` + ps.map((p, i) => {
     const par = upperPar(p);
     const filled = UPPER.some(c => p.scores[c.id] != null);
-    const parTxt = filled ? `<small class="${par > 0 ? 'up' : par < 0 ? 'down' : ''}">${par > 0 ? '+' : ''}${par}</small>` : '';
-    return `<td class="${curCls(i)}">${upperSum(p)}<span class="of">/63</span>${parTxt}</td>`;
+    const parCls = par > 0 ? 'up' : par < 0 ? 'down' : '';
+    const parTxt = filled ? `<small class="d-only ${parCls}">${par > 0 ? '+' : ''}${par}</small>` : '';
+    const mTxt = upperSum(p) >= BONUS_AT ? '<small class="m-only up">+35</small>'
+      : (filled ? `<small class="m-only ${parCls}">${par > 0 ? '+' : ''}${par}</small>` : '');
+    return `<td class="${curCls(i)}">${upperSum(p)}<span class="of">/63</span>${parTxt}${mTxt}</td>`;
   }).join('') + '</tr>';
   html += `<tr class="bonus"><td class="cat"><span class="nm">보너스</span><span class="ds">63점 이상이면 +35</span></td>` + ps.map((p, i) => {
     let t = '';
@@ -1336,24 +1453,33 @@ function bindGame() {
   $('#rulesOverlay').addEventListener('click', e => { if (e.target.id === 'rulesOverlay') e.currentTarget.hidden = true; });
 
   let quitArmed = null;
+  const QUIT_LABEL = '<span class="d-only">그만하기</span><span class="m-only">종료</span>';
   $('#quitBtn').addEventListener('click', e => {
     const b = e.currentTarget;
-    if (quitArmed) { clearTimeout(quitArmed); quitArmed = null; b.textContent = '그만하기'; showSetup(); return; }
-    b.textContent = '한 번 더 누르면 종료';
-    quitArmed = setTimeout(() => { quitArmed = null; b.textContent = '그만하기'; }, 2500);
+    if (quitArmed) { clearTimeout(quitArmed); quitArmed = null; b.innerHTML = QUIT_LABEL; showSetup(); return; }
+    b.textContent = '정말 종료?';
+    quitArmed = setTimeout(() => { quitArmed = null; b.innerHTML = QUIT_LABEL; }, 2500);
   });
+  $('#ticker').addEventListener('click', () => {
+    if (!state) return;
+    $('#logFull').innerHTML = state.log.map(l => `<li class="${l.cls}">${l.html}</li>`).join('');
+    $('#logOverlay').hidden = false;
+    $('#logClose').focus();
+  });
+  $('#logClose').addEventListener('click', () => { $('#logOverlay').hidden = true; });
+  $('#logOverlay').addEventListener('click', e => { if (e.target.id === 'logOverlay') e.currentTarget.hidden = true; });
   $('#againBtn').addEventListener('click', newGame);
   $('#toSetupBtn').addEventListener('click', showSetup);
 
   const gameKeys = e => {
-    if (!state || $('#game').hidden || !$('#rulesOverlay').hidden || !$('#endOverlay').hidden) return false;
+    if (!state || $('#game').hidden || !$('#rulesOverlay').hidden || !$('#endOverlay').hidden || !$('#logOverlay').hidden) return false;
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'select' || tag === 'textarea') return false;
     if (tag === 'button' && e.target.id !== 'cup') return false;
     return true;
   };
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { $('#rulesOverlay').hidden = true; return; }
+    if (e.key === 'Escape') { $('#rulesOverlay').hidden = true; $('#logOverlay').hidden = true; return; }
     if (!gameKeys(e)) return;
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
@@ -1376,7 +1502,7 @@ function bindGame() {
 }
 function renderSoundBtn() {
   const b = $('#soundBtn');
-  b.textContent = settings.sound ? '소리 켜짐' : '소리 꺼짐';
+  b.innerHTML = `<span class="d-only">${settings.sound ? '소리 켜짐' : '소리 꺼짐'}</span><span class="m-only">${settings.sound ? '소리' : '소리 끔'}</span>`;
   b.classList.toggle('on', settings.sound);
   b.setAttribute('aria-pressed', settings.sound ? 'true' : 'false');
 }
@@ -1398,6 +1524,7 @@ function start(data) {
     if (!state.phase || state.phase === 'shake') state.phase = state.rolled ? 'table' : 'cup';
     $('#setup').hidden = true;
     $('#game').hidden = false;
+    document.body.classList.add('ingame');
     render();
     if (cur().type === 'ai') aiTurn(++gameId);
   }
